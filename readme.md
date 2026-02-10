@@ -1,6 +1,6 @@
 # Task Management System (MERN Stack)
 
-## 📌 Project Overview
+## Project Overview
 The Task Management System is a full-stack web application developed using the MERN stack.
 The application helps users create, manage, and track tasks efficiently through a centralized platform.
 
@@ -9,7 +9,7 @@ with real-world full-stack application development.
 
 ---
 
-## 🎯 Objectives
+## Objectives
 - Understand MERN stack architecture
 - Design a structured backend system
 - Implement RESTful APIs
@@ -18,14 +18,14 @@ with real-world full-stack application development.
 
 ---
 
-## 🧩 Problem Statement
+## Problem Statement
 Managing daily tasks manually or across multiple platforms can be inefficient.
 This project aims to provide a centralized task management system where users
 can create, update, view, and delete tasks easily.
 
 ---
 
-## 📐 Project Scope
+## Project Scope
 
 ### In Scope
 - User-based task management
@@ -35,12 +35,10 @@ can create, update, view, and delete tasks easily.
 
 ### Out of Scope
 - Payment gateway integration
-- Third-party service integrations
-- Advanced analytics and reporting
 
 ---
 
-## ⚙️ Technology Stack
+## Technology Stack
 - **Frontend:** React.js
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB
@@ -48,10 +46,12 @@ can create, update, view, and delete tasks easily.
 
 ---
 
-## 💻 System Requirements
+## System Requirements
 
 ### Software Requirements
 - Node.js (v18 or above)
+- npm
+- React.js
 - MongoDB / MongoDB Atlas
 - Git
 - Visual Studio Code
@@ -62,43 +62,51 @@ can create, update, view, and delete tasks easily.
 
 ---
 
-## 🏗️ High-Level Architecture
+## High-Level Architecture
 The application follows the MERN architecture where the frontend communicates
 with the backend via REST APIs. The backend processes requests and interacts
 with MongoDB using Mongoose for data persistence.
 
 ---
+---
 
-## 🛠️ Tools Used
-- Node.js
-- GitHub
-- Visual Studio Code
+# MERN Stack Architecture
+
+## MongoDB (Database Layer)
+MongoDB is a NoSQL, document-oriented database used to store application data.
+
+- Stores data in JSON-like documents
+- Flexible schema design
+- High scalability and performance
+- Used to persist user and task data
 
 ---
 
-## 📅 Day 1 – Requirement Analysis & Environment Setup
-
-### Activities Performed
-- Studied MERN stack architecture
-- Installed Node.js, MongoDB, Git, and VS Code
-- Created GitHub repository
-- Prepared project requirement documentation
-
-### Outcome
-- Development environment successfully configured
-- Project planning completed
+## Express.js (Application Layer)
+Express.js is a lightweight backend framework built on Node.js.
+- Handles HTTP requests and responses
+- Defines RESTful API routes
+- Manages middleware for authentication, validation, and error handling
+- Acts as a bridge between frontend and database
 
 ---
 
-## 📦 Deliverables
-- Project requirement documentation
-- GitHub repository setup
-- Environment configuration
+## React.js (Presentation Layer)
 
----
+React.js is a frontend JavaScript library used to build user interfaces.
 
-## 📌 Conclusion
-This README documents the requirement analysis and planning phase of the project.
-It serves as the foundation for development in subsequent stages of the internship.
+- Component-based architecture
+- Efficient UI rendering using Virtual DOM
+- Handles user interactions and state management
+- Communicates with backend APIs to fetch and update data
 
----
+DOM -> The DOM represents the page structure, while the Virtual DOM tracks changes and efficiently updates the real DOM
+
+## Node.js (Runtime Environment)
+
+Node.js is a JavaScript runtime that allows execution of JavaScript on the server side.
+
+- Handles backend logic
+- Supports asynchronous and non-blocking operations
+- Enables scalable server-side development
+- Works with Express.js to build APIs
