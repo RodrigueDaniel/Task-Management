@@ -1,5 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+import pkg from "@prisma/client";
 
-const prisma = new PrismaClient();
+dotenv.config(); // load env BEFORE using Prisma
 
-export default prisma;
+const { PrismaClient } = pkg;
+
+export const prisma = new PrismaClient({
+  log: ["query", "info", "warn", "error"], // optional but safe
+});
