@@ -1,24 +1,15 @@
 import express from "express";
-import Task from "../models/task.model.js";
+import { verifyToken } from "../middleware/auth.middleware"
+import { createTask, getTasks, getTaskById, updateTask, deleteTask } from "../controllers/task.controller";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const task = await Task.create(req.body);
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+router.use(verifyToken);
 
-router.get("/", async (req, res) => {
-  try {
-    const tasks = await Task.find().populate("user", "name email");
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.post("/", createTask);
+router.get("/", getTasks);
+router.get("/:id", getTaskById);
+router.put("/:id", updateTask);
+router.delete("/:id", deleteTask);
 
 export default router;
