@@ -47,14 +47,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/task-backend-prisma:latest
-
             docker stop task-container || true
             docker rm task-container || true
-
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > app.env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> app.env
-            echo "JWT_EXPIRES_IN=1d" >> app.env
-            echo "NODE_ENV=production" >> app.env
-            echo "PORT=5000" >> app.env
-
             docker run -d --name task-container --restart unless-stopped -p 80:5000 --env-file app.env ${{ secrets.DOCKER_USERNAME }}/task-backend-prisma:latest
