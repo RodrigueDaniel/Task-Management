@@ -3,11 +3,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import connectDB from "./config/db.js";
+import { prisma } from "./lib/prisma.js";
 import userRoutes from "./routes/user.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 
 dotenv.config();
+
+console.log("ENV CHECK:", process.env.DATABASE_URL);
 
 const app = express();
 
@@ -39,7 +41,7 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(err.statusCode || 500)({
+  res.status(err.statusCode || 500).json({
     message: process.env.NODE_ENV === "production" 
     ? "Internal Server Error"
     : err.message,
@@ -50,10 +52,13 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await connectDB();
+    await prisma.$connect();   
+    console.log("Database connected successfully");
+
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
     });
+
   } catch (error) {
     console.error("Database connection failed:", error.message);
     process.exit(1);
