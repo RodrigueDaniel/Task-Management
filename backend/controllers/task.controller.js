@@ -5,8 +5,8 @@ export const createTask = async (req, res, next) => {
         const userId = req.userId;
         const { title, description } = req.body;
 
-        if(!title || !userId){
-            return res.status(400).json({ message: "Title and required"});
+        if (!title?.trim()) {
+            return res.status(400).json({ message: "Title is required" });
         }
 
         const task = await prisma.task.create({
@@ -54,52 +54,61 @@ export const getTaskById = async (req, res, next) => {
 }
 
 export const updateTask = async (req, res, next) => {
-    try {
-        const userId = req.userId;
-        const taskId = parseInt(req.params.id);
-        const { title, description, status } = req.body;
+  try {
+    const userId = req.userId;
+    const taskId = parseInt(req.params.id);
+    const { title, description, status } = req.body;
 
-        const task = await prisma.task.findFirst({
-            where: {
-                id: taskId,
-                userId,
-            }
-        })
-
-        if(!task) {
-            return res.status(404).json({ message: "Task not found" })
-        }
-
-        const updated = await prisma.task.update({
-            where: { id:taskId },
-            data: { title, description, status }
-        });
-        res.json({ message: "Task updated successfully", task: updated});
-    } catch (error) {
-        next(error);
+    if (isNaN(taskId)) {
+      return res.status(400).json({ message: "Invalid task ID" });
     }
-}
+
+    const allowedStatus = ["PENDING", "IN_PROGRESS", "COMPLETED"];
+    if (status !== undefined && !allowedStatus.includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
+    if (status !== undefined) data.status = status;
+
+    const result = await prisma.task.updateMany({
+      where: { id: taskId, userId },
+      data
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.json({ message: "Task updated successfully" });
+
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const deleteTask = async (req, res, next) => {
-    try {
-        const userId = req.userId;
-        const taskId = parseInt(req.params.id);
+  try {
+    const userId = req.userId;
+    const taskId = parseInt(req.params.id);
 
-        const task = await prisma.task.findFirst({
-            where: {
-                id: taskId,
-                userId,
-            }
-        })
-
-        if(!task) {
-            return res.status(404).json({ message: "Task not found"})
-        }
-        await prisma.task.delete({
-            where:{ id: taskId }
-        });
-        res.json({ message: "Task deleted sucessfully" });
-    } catch (error) {
-        next(error);
+    if (isNaN(taskId)) {
+      return res.status(400).json({ message: "Invalid task ID" });
     }
-}
+
+    const result = await prisma.task.deleteMany({
+      where: { id: taskId, userId }
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully" });
+
+  } catch (error) {
+    next(error);
+  }
+};
