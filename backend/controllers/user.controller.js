@@ -70,9 +70,15 @@ export const loginUser = async (req, res, next) => {
       { expiresIn: process.env.JWT_EXPIRES_IN}
     )
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000
+    })
+
     res.json({
       message: "Login successful",
-      token
     })
   } catch (error) {
     next(error);
