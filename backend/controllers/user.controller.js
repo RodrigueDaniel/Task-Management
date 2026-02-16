@@ -65,16 +65,36 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ sub: user.id, email: user.email },
+    const accessToken = jwt.sign(
+      { sub: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN}
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
     )
 
-    res.cookie("token", token, {
+    const refreshToken = jwt.sign(
+      { sub: user.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.REFRESH_TOKEN_EXPIRES}
+    )
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      }
+    })
+
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false,
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 30 * 60 * 1000,
+    })
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 
     res.json({
@@ -83,4 +103,58 @@ export const loginUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+}
+
+export const refreshAccessToken = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if(!refreshToken) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    )
+
+    const tokenIndb = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+    })
+
+    if(!tokenInDb) {
+      return res.status(401).json({ message: "Invalid refresh token"});
+    }
+
+    const newAccessToken = jwt.verify(
+      { sub: decoded.sub },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
+    )
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 30 * 60 * 1000,
+    })
+
+    res.json({ message: "Access token refreshed" });
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid refresh token" })
+  }
+}
+
+export const logoutUser = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if(refreshToken) {
+    await prisma.refreshToken.deleteMany({
+      where: { token: refreshToken },
+    });
+  }
+
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  res.json({ message: "Logged out successfully" });
 }
