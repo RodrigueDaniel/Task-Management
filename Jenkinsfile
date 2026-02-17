@@ -18,12 +18,12 @@ pipeline {
 
                     sh '''
                     echo "Stopping existing containers..."
-                    sudo docker compose -f docker-compose.prod.yml down || true
+                    docker compose -f docker-compose.prod.yml down || true
 
                     echo "Building and starting containers..."
-                    sudo docker compose -f docker-compose.prod.yml up -d --build
+                    docker compose -f docker-compose.prod.yml up -d --build
 
-                    echo "Deployment completed."
+                    echo "Deployment completed successfully."
                     '''
                 }
             }
