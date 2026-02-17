@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ const Login = () => {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -17,18 +20,37 @@ const Login = () => {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  try {
-    await API.post("/auth/login", formData);
+    if (loading) return;
 
-    navigate("/dashboard");
+    const { email, password } = formData;
 
-  } catch (err) {
-    setError(err.response?.data?.message || "Invalid credentials");
-  }
-};
+    if (!email || !password) {
+      toast.error("Email and password are required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await API.post("/auth/login", {
+        email,
+        password,
+      });
+
+      toast.success("Login successful");
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 800);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -74,12 +96,12 @@ const handleSubmit = async (e) => {
             />
           </div>
 
-          {/* Button */}
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-200"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 

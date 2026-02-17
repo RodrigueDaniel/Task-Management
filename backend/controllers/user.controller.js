@@ -122,11 +122,11 @@ export const refreshAccessToken = async (req, res) => {
       where: { token: refreshToken },
     })
 
-    if(!tokenInDb) {
+    if(!tokenIndb) {
       return res.status(401).json({ message: "Invalid refresh token"});
     }
 
-    const newAccessToken = jwt.verify(
+    const newAccessToken = jwt.sign(
       { sub: decoded.sub },
       process.env.JWT_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }

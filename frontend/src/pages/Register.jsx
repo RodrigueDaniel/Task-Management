@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const Register = () => {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -22,12 +25,16 @@ const Register = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
+  if (loading) return;
+
   const { name, email, password, confirmPassword } = formData;
 
   if (password !== confirmPassword) {
     setError("Passwords do not match");
     return;
   }
+
+  setLoading(true);
 
   try {
     await API.post("/auth/register", {
@@ -36,11 +43,16 @@ const handleSubmit = async (e) => {
       password,
     });
 
-    alert("Registration successful!");
-    navigate("/");
+    toast.success("Registration successful");
+
+    setTimeout(() => {
+      navigate("/");
+    }, 1000);
 
   } catch (err) {
-    setError(err.response?.data?.message || "Something went wrong");
+    toast.error(err.response?.data?.message || "Registration failed");
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -119,9 +131,10 @@ const handleSubmit = async (e) => {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-200"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
 
