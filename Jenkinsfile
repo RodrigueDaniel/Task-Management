@@ -13,7 +13,8 @@ pipeline {
             steps {
                 withCredentials([
                     string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL'),
-                    string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET')
+                    string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET'),
+                    string(credentialsId: 'JWT_REFRESH_SECRET', variable: 'JWT_REFRESH_SECRET')
                 ]) {
 
                     sh '''
@@ -21,7 +22,7 @@ pipeline {
                     docker compose -f docker-compose.prod.yml down || true
 
                     echo "Building and starting containers..."
-                    docker compose -f docker-compose.prod.yml up -d --build
+                    docker compose -f docker-compose.prod.yml up -d --build --force-recreate
 
                     echo "Deployment completed successfully."
                     '''
