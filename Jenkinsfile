@@ -47,7 +47,7 @@ pipeline {
                 docker run -d \
                   --name $CONTAINER_NAME \
                   --restart unless-stopped \
-                  -p 80:5000 \
+                  -p 5000:5000 \
                   -e DATABASE_URL='${DATABASE_URL}' \
                   -e JWT_SECRET='${JWT_SECRET}' \
                   -e JWT_EXPIRES_IN=1d \
