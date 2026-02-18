@@ -40,6 +40,10 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
