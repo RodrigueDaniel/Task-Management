@@ -18,12 +18,40 @@ pipeline {
                 ]) {
 
                     sh '''
+                    echo "=============================="
                     echo "Building new backend image..."
+                    echo "=============================="
                     docker build -t task-backend-new ./backend
 
-                    echo "Starting GREEN backend on port 5001..."
+
+                    echo "=============================="
+                    echo "Detecting active backend port"
+                    echo "=============================="
+
+                    ACTIVE_PORT=$(grep -oP 'server localhost:\\K[0-9]+' /etc/nginx/conf.d/app.conf)
+
+                    if [ "$ACTIVE_PORT" = "5000" ]; then
+                        NEW_PORT=5001
+                    else
+                        NEW_PORT=5000
+                    fi
+
+                    echo "Active port: $ACTIVE_PORT"
+                    echo "New port: $NEW_PORT"
+
+
+                    echo "=============================="
+                    echo "Cleaning old GREEN container"
+                    echo "=============================="
+                    docker rm -f task-backend-green 2>/dev/null || true
+
+
+                    echo "=============================="
+                    echo "Starting GREEN on port $NEW_PORT"
+                    echo "=============================="
+
                     docker run -d --name task-backend-green \
-                      -p 5001:5000 \
+                      -p $NEW_PORT:5000 \
                       -e DATABASE_URL="$DATABASE_URL" \
                       -e JWT_SECRET="$JWT_SECRET" \
                       -e JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
@@ -33,25 +61,37 @@ pipeline {
                       -e NODE_ENV=production \
                       task-backend-new
 
-                    echo "Waiting for GREEN to become healthy..."
+
+                    echo "=============================="
+                    echo "Waiting for health check..."
+                    echo "=============================="
                     sleep 8
 
-                    if curl -f http://localhost:5001/api/health; then
-                        echo "Health check passed. Switching traffic..."
 
-                        sudo sed -i 's/server localhost:5000;/server localhost:5001;/' /etc/nginx/conf.d/app.conf
+                    if curl -f http://localhost:$NEW_PORT/api/health; then
+
+                        echo "Health check PASSED ✅"
+                        echo "Switching nginx upstream..."
+
+                        sudo sed -i "s/server localhost:$ACTIVE_PORT;/server localhost:$NEW_PORT;/" /etc/nginx/conf.d/app.conf
                         sudo nginx -t
                         sudo systemctl reload nginx
 
-                        echo "Stopping old BLUE backend..."
-                        docker stop task-backend || true
-                        docker rm task-backend || true
+
+                        echo "Stopping old backend..."
+                        docker stop task-backend 2>/dev/null || true
+                        docker rm task-backend 2>/dev/null || true
 
                         docker rename task-backend-green task-backend
 
-                        echo "Blue-Green deployment successful!"
+                        echo "==================================="
+                        echo "Blue-Green Deployment SUCCESS 🚀"
+                        echo "==================================="
+
                     else
-                        echo "Health check failed. Rolling back..."
+                        echo "Health check FAILED ❌"
+                        echo "Rolling back..."
+
                         docker stop task-backend-green || true
                         docker rm task-backend-green || true
                         exit 1
