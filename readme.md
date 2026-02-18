@@ -1,6 +1,7 @@
 # Task Management System (MERN Stack)
 
 ## Project Overview
+
 The Task Management System is a full-stack web application developed using the MERN stack.
 The application helps users create, manage, and track tasks efficiently through a centralized platform.
 
@@ -10,6 +11,7 @@ with real-world full-stack application development.
 ---
 
 ## Objectives
+
 - Understand MERN stack architecture
 - Design a structured backend system
 - Implement RESTful APIs
@@ -19,6 +21,7 @@ with real-world full-stack application development.
 ---
 
 ## Problem Statement
+
 Managing daily tasks manually or across multiple platforms can be inefficient.
 This project aims to provide a centralized task management system where users
 can create, update, view, and delete tasks easily.
@@ -28,17 +31,21 @@ can create, update, view, and delete tasks easily.
 ## Project Scope
 
 ### In Scope
+
 - User-based task management
 - Task creation, update, deletion, and retrieval
 - Backend API development
+
 - Database integration using MongoDB
 
 ### Out of Scope
+
 - Payment gateway integration
 
 ---
 
 ## Technology Stack
+
 - **Frontend:** React.js
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB
@@ -49,6 +56,7 @@ can create, update, view, and delete tasks easily.
 ## System Requirements
 
 ### Software Requirements
+
 - Node.js (v18 or above)
 - npm
 - React.js
@@ -57,22 +65,26 @@ can create, update, view, and delete tasks easily.
 - Visual Studio Code
 
 ### Hardware Requirements
+
 - Minimum 8 GB RAM
 - Stable internet connection
 
 ---
 
 ## High-Level Architecture
+
 The application follows the MERN architecture where the frontend communicates
 with the backend via REST APIs. The backend processes requests and interacts
 with MongoDB using Mongoose for data persistence.
 
 ---
+
 ---
 
 # MERN Stack Architecture
 
 ## MongoDB (Database Layer)
+
 MongoDB is a NoSQL, document-oriented database used to store application data.
 
 - Stores data in JSON-like documents
@@ -83,7 +95,9 @@ MongoDB is a NoSQL, document-oriented database used to store application data.
 ---
 
 ## Express.js (Application Layer)
+
 Express.js is a lightweight backend framework built on Node.js.
+
 - Handles HTTP requests and responses
 - Defines RESTful API routes
 - Manages middleware for authentication, validation, and error handling
