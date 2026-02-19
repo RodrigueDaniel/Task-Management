@@ -26,8 +26,14 @@ const Dashboard = () => {
   const [creating, setCreating] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   
-  // NEW: Added state for task filtering (Day 9 Requirement)
+  // NEW: State to control the loading indicator for the edit modal
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Day 9 Requirement
   const [filterStatus, setFilterStatus] = useState("ALL");
+  
+  // State to control the visibility of the logout confirmation modal
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   
   const navigate = useNavigate();
 
@@ -115,6 +121,7 @@ const Dashboard = () => {
     }
 
     try {
+      setIsUpdating(true); // Start loading state
       await api.put(`/tasks/${editingTask.id}`, {
         title: editingTask.title,
         description: editingTask.description,
@@ -130,9 +137,12 @@ const Dashboard = () => {
       toast.success("Task updated");
     } catch {
       toast.error("Failed to update task");
+    } finally {
+      setIsUpdating(false); // End loading state
     }
   };
 
+  // LOGOUT (Actual action)
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
@@ -142,7 +152,7 @@ const Dashboard = () => {
     }
   };
 
-  // NEW: Filter tasks based on selected status before rendering (Day 9 Requirement)
+  // Filter tasks based on selected status
   const filteredTasks = tasks.filter((task) =>
     filterStatus === "ALL" ? true : task.status === filterStatus
   );
@@ -164,8 +174,8 @@ const Dashboard = () => {
             Task Manager 📋
           </h1>
           <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base"
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base transition"
           >
             Logout
           </button>
@@ -199,14 +209,22 @@ const Dashboard = () => {
             <button
               type="submit"
               disabled={creating}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg disabled:opacity-50 w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg disabled:opacity-50 w-full sm:w-auto transition flex items-center justify-center gap-2"
             >
-              {creating ? "Adding..." : "Add Task"}
+              {creating ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                </>
+              ) : "Add Task"}
             </button>
           </form>
         </div>
 
-        {/* TASK FILTERING UI (Day 9 Requirement) */}
+        {/* TASK FILTERING UI */}
         <div className="mb-6 flex flex-wrap gap-2">
           <button
             onClick={() => setFilterStatus("ALL")}
@@ -302,9 +320,9 @@ const Dashboard = () => {
 
       {/* EDIT MODAL */}
       {editingTask && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Edit Task</h2>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-40">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Edit Task</h2>
 
             <input
               type="text"
@@ -312,7 +330,8 @@ const Dashboard = () => {
               onChange={(e) =>
                 setEditingTask({ ...editingTask, title: e.target.value })
               }
-              className="w-full border px-3 py-2 rounded-lg mb-3"
+              className="w-full border px-4 py-2 rounded-xl mb-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              disabled={isUpdating}
             />
 
             <textarea
@@ -324,22 +343,73 @@ const Dashboard = () => {
                   description: e.target.value,
                 })
               }
-              className="w-full border px-3 py-2 rounded-lg"
+              className="w-full border px-4 py-2 rounded-xl mb-2 focus:ring-2 focus:ring-blue-500 outline-none"
+              disabled={isUpdating}
             />
 
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setEditingTask(null)}
-                className="px-4 py-2 rounded-lg border hover:bg-gray-50"
+                className="px-5 py-2 rounded-xl border font-medium text-gray-700 hover:bg-gray-50 transition"
+                disabled={isUpdating}
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateTask}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                disabled={isUpdating}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-xl transition flex items-center justify-center gap-2 min-w-25 disabled:opacity-70"
               >
-                Save
+                {isUpdating ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity">
+          <div className="bg-white p-6 rounded-3xl w-full max-w-sm shadow-2xl transform transition-all">
+            <div className="text-center">
+              {/* Icon Container */}
+              <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
+                <span className="text-2xl">🚪</span>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Ready to leave?
+              </h3>
+              
+              <p className="text-gray-500 mb-6 px-2">
+                Are you sure you want to log out of your account?
+              </p>
+              
+              {/* Buttons */}
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 shadow-md shadow-red-500/30 transition duration-200"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </div>
         </div>
