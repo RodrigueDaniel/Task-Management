@@ -1,115 +1,95 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../schemas/auth.schema";
+import { api } from "../services/api";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
   });
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (loading) return;
-
-    const { email, password } = formData;
-
-    if (!email || !password) {
-      toast.error("Email and password are required");
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data) => {
+  
     try {
-      await API.post("/auth/login", {
-        email,
-        password,
-      });
-
-      toast.success("Login successful");
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 800);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid credentials");
-    } finally {
-      setLoading(false);
+      await api.post("/auth/login", data);
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Invalid credentials",
+      );
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
+      <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Welcome Back
         </h2>
-        <p className="text-center text-gray-500 mb-6 text-sm">
-          Please login to your account
-        </p>
 
-        {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+              placeholder="Email"
+              {...register("email")}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.email
+                  ? "border-red-500 focus:ring-red-500"
+                  : "focus:ring-blue-500"
+              }`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+              placeholder="Password"
+              {...register("password")}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.password
+                  ? "border-red-500 focus:ring-red-500"
+                  : "focus:ring-blue-500"
+              }`}
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
+          {/* Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Logging in..." : "Login"}
+            {isSubmitting ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="text-center text-gray-600 mt-4">
           Don’t have an account?{" "}
           <Link
             to="/register"
-            className="text-green-600 font-semibold hover:underline"
+            className="text-blue-600 font-medium hover:underline"
           >
             Register
           </Link>

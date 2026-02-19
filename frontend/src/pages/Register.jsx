@@ -1,146 +1,96 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema } from "../schemas/auth.schema";
+import { api } from "../services/api";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(registerSchema) });
+
+  const onSubmit = async (data) => {
+    try {
+      await api.post("/auth/register", data);
+      toast.success("Registration successful");
+      navigate("/login");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Registration failed"
+      );
+    }
   };
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (loading) return;
-
-  const { name, email, password, confirmPassword } = formData;
-
-  if (password !== confirmPassword) {
-    setError("Passwords do not match");
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    await API.post("/auth/register", {
-      name,
-      email,
-      password,
-    });
-
-    toast.success("Registration successful");
-
-    setTimeout(() => {
-      navigate("/");
-    }, 1000);
-
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Registration failed");
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
-          Create Account
+      <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Create an Account
         </h2>
-        <p className="text-center text-gray-500 mb-6 text-sm">
-          Sign up to get started
-        </p>
 
-        {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+              placeholder="Name"
+              {...register("name")}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.name.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+              placeholder="Email"
+              {...register("email")}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+              placeholder="Password"
+              {...register("password")}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Re-enter password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
-            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Registering..." : "Register"}
+            {isSubmitting ? "Registering..." : "Register"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="text-center text-gray-600 mt-4">
           Already have an account?{" "}
-          <Link to="/" className="text-green-600 font-semibold hover:underline">
+          <Link
+            to="/login"
+            className="text-blue-600 font-medium hover:underline"
+          >
             Login
           </Link>
         </p>
