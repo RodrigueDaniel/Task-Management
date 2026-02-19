@@ -9,10 +9,9 @@ pipeline {
             }
         }
 
-        /* ========================================
-           FRONTEND DEPLOYMENT (Rolling Update)
-        ======================================== */
-
+        // =========================================================
+        // FRONTEND DEPLOY (Rolling Update - Production Safe)
+        // =========================================================
         stage('Frontend Build & Deploy') {
             steps {
                 sh '''
@@ -27,16 +26,13 @@ pipeline {
                 docker rm -f task-frontend 2>/dev/null || true
 
                 echo "Starting new frontend container..."
-                docker run -d \
-                  --name task-frontend \
-                  -p 3000:80 \
-                  task-frontend-new
+                docker run -d --name task-frontend -p 3000:80 task-frontend-new
 
                 echo "Validating frontend..."
                 sleep 5
 
                 if ! curl -sf http://localhost:3000 > /dev/null; then
-                    echo "Frontend deployment failed ❌"
+                    echo "Frontend validation FAILED ❌"
                     exit 1
                 fi
 
@@ -45,10 +41,9 @@ pipeline {
             }
         }
 
-        /* ========================================
-           BACKEND DEPLOYMENT (Blue-Green Safe)
-        ======================================== */
-
+        // =========================================================
+        // BACKEND BLUE-GREEN DEPLOY (Production Safe + Rollback)
+        // =========================================================
         stage('Backend Blue-Green Deploy') {
             steps {
                 withCredentials([
@@ -65,8 +60,10 @@ pipeline {
                     echo "========================================"
                     docker build -t task-backend-new ./backend
 
+                    echo "========================================"
+                    echo "Detecting Active Backend Port..."
+                    echo "========================================"
 
-                    echo "Detecting active backend port..."
                     ACTIVE_PORT=$(grep -oP 'server localhost:\\K[0-9]+' /etc/nginx/conf.d/app.conf)
 
                     if [ "$ACTIVE_PORT" = "5000" ]; then
@@ -78,15 +75,20 @@ pipeline {
                     echo "Active Port : $ACTIVE_PORT"
                     echo "New Port    : $NEW_PORT"
 
-
-                    echo "Cleaning old GREEN container..."
+                    echo "========================================"
+                    echo "Cleaning Old GREEN Container..."
+                    echo "========================================"
                     docker rm -f task-backend-green 2>/dev/null || true
 
-                    echo "Freeing target port if occupied..."
+                    echo "========================================"
+                    echo "Freeing Target Port if Occupied..."
+                    echo "========================================"
                     docker ps --filter "publish=$NEW_PORT" --format "{{.ID}}" | xargs -r docker rm -f
 
+                    echo "========================================"
+                    echo "Starting GREEN Container..."
+                    echo "========================================"
 
-                    echo "Starting GREEN container..."
                     docker run -d --name task-backend-green \
                       -p $NEW_PORT:5000 \
                       -e DATABASE_URL="$DATABASE_URL" \
@@ -98,12 +100,13 @@ pipeline {
                       -e NODE_ENV=production \
                       task-backend-new
 
-
-                    echo "Waiting for backend health..."
+                    echo "========================================"
+                    echo "Waiting for Backend Health..."
+                    echo "========================================"
 
                     HEALTH_OK=false
 
-                    for i in {1..20}
+                    for i in $(seq 1 20)
                     do
                         if curl -sf http://localhost:$NEW_PORT/api/health > /dev/null; then
                             HEALTH_OK=true
@@ -120,14 +123,17 @@ pipeline {
                         exit 1
                     fi
 
+                    echo "========================================"
+                    echo "Switching Nginx Upstream..."
+                    echo "========================================"
 
-                    echo "Switching nginx upstream..."
                     sudo sed -i "s/server localhost:$ACTIVE_PORT;/server localhost:$NEW_PORT;/" /etc/nginx/conf.d/app.conf
                     sudo nginx -t
                     sudo systemctl reload nginx
 
-
-                    echo "Validating through nginx..."
+                    echo "========================================"
+                    echo "Validating Through Nginx..."
+                    echo "========================================"
                     sleep 5
 
                     if ! curl -sf http://localhost/api/health > /dev/null; then
@@ -140,16 +146,17 @@ pipeline {
                         exit 1
                     fi
 
+                    echo "========================================"
+                    echo "Stopping OLD Backend..."
+                    echo "========================================"
 
-                    echo "Stopping old backend..."
                     docker stop task-backend 2>/dev/null || true
                     docker rm task-backend 2>/dev/null || true
 
                     docker rename task-backend-green task-backend
 
-
                     echo "========================================"
-                    echo "FULL DEPLOYMENT SUCCESS 🚀"
+                    echo "BLUE-GREEN DEPLOYMENT SUCCESS 🚀"
                     echo "========================================"
                     '''
                 }
@@ -159,11 +166,10 @@ pipeline {
 
     post {
         success {
-            echo "🚀 Production Deployment Successful"
+            echo "✅ Full Production Deployment Successful 🚀"
         }
         failure {
             echo "❌ Deployment Failed – Rolled Back Safely"
         }
     }
 }
-    
