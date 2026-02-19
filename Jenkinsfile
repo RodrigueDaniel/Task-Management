@@ -49,6 +49,12 @@ pipeline {
 
 
                     echo "========================================"
+                    echo "Freeing target port if occupied..."
+                    echo "========================================"
+                    docker ps --filter "publish=$NEW_PORT" --format "{{.ID}}" | xargs -r docker rm -f
+
+
+                    echo "========================================"
                     echo "Starting GREEN container..."
                     echo "========================================"
                     docker run -d --name task-backend-green \
