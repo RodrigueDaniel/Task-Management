@@ -75,7 +75,7 @@ pipeline {
 
                     HEALTH_OK=false
 
-                    for i in {1..20}
+                    for i in $(seq 1 20)
                     do
                         if curl -sf http://localhost:$NEW_PORT/api/health > /dev/null; then
                             HEALTH_OK=true
