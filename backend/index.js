@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK" });
+  res.status(200).json({ status: "OK v3" });
 });
 
 app.use((req, res) => {
