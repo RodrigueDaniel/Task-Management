@@ -13,8 +13,8 @@ export const registerUser = async (req, res, next) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be 6+ chars" });
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be 8+ chars" });
     }
 
     const existing = await prisma.user.findUnique({
