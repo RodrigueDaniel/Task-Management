@@ -23,6 +23,9 @@ const limiter = rateLimit({
   max: 100,
   message: "Too many requests from this IP, please try again later."
 })
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK v3" });
+});
 app.use(limiter);
 
 app.use(cors({
@@ -40,9 +43,7 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK v3" });
-});
+
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
